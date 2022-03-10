@@ -1,9 +1,7 @@
-// const node = {
-//   row,
-//   col,
-//   isVisited,
-//   distance,
-// };
+// Performs Dijkstra's algorithm; returns *all* nodes in the order
+// in which they were visited. Also makes nodes point back to their
+// previous node, effectively allowing us to compute the shortest path
+// by backtracking from the finish node.
 
 export const dijkstra = (grid, startNode, finishNode) => {
   const visitedNodesInOrder = [];
@@ -12,10 +10,15 @@ export const dijkstra = (grid, startNode, finishNode) => {
   while (!!unvisitedNodes.length) {
     sortNodesByDistance(unvisitedNodes);
     const closestNode = unvisitedNodes.shift();
+    // If we encounter a wall we skip it.
+    if (closestNode.isWall) continue;
+    // If the closest node is is at a distance of infinity
+    // We are trapped and should thefefore stop
+    if (closestNode.distance === Infinity) return visitedNodesInOrder;
     closestNode.isVisited = true;
     visitedNodesInOrder.push(closestNode);
     if (closestNode === finishNode) return visitedNodesInOrder;
-    updateNeighbors(closestNode, grid);
+    updateUnvisitedNeighbors(closestNode, grid);
   }
 };
 
@@ -23,14 +26,15 @@ const sortNodesByDistance = (unvisitedNodes) => {
   unvisitedNodes.sort((nodeA, nodeB) => nodeA.distance - nodeB.distance);
 };
 
-const updateNeighbors = (node, grid) => {
-  const neighbors = getNeighbors(node, grid);
+const updateUnvisitedNeighbors = (node, grid) => {
+  const neighbors = getUnvisitedNeighbors(node, grid);
   for (const neighbor of neighbors) {
     neighbor.distance = node.distance + 1;
+    neighbor.previousNode = node;
   }
 };
 
-const getNeighbors = (node, grid) => {
+const getUnvisitedNeighbors = (node, grid) => {
   const neighbors = [];
   const { col, row } = node;
   //   Takes Upward node unless on row 0
@@ -48,6 +52,7 @@ export function getNodesInShortestPathOrder(finishNode) {
   const nodesInShortestPathOrder = [];
   let currentNode = finishNode;
   while (currentNode !== null) {
+    // was unsift
     nodesInShortestPathOrder.unshift(currentNode);
     currentNode = currentNode.previousNode;
   }

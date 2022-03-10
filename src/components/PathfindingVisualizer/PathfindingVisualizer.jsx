@@ -15,7 +15,23 @@ const FINISH_NODE_COL = 35;
 const PathfindingVisualizer = () => {
   const [squares, setSquares] = useState({
     grid: [],
+    mouseIsPressed: false,
   });
+
+  const handleMouseDown = (row, col) => {
+    const newGrid = getnewGridWithWallToggled(squares.grid, row, col);
+    setSquares({ grid: newGrid, mouseIsPressed: true });
+  };
+
+  const handleMouseEnter = (row, col) => {
+    if (!squares.mouseIsPressed) return;
+    const newGrid = getnewGridWithWallToggled(squares.grid, row, col);
+    setSquares({ grid: newGrid, mouseIsPressed: true });
+  };
+
+  const handleMouseUp = () => {
+    setSquares({ grid, mouseIsPressed: false });
+  };
 
   const getInitialGrid = () => {
     const grid = [];
@@ -57,6 +73,7 @@ const PathfindingVisualizer = () => {
       }, 10 * i);
     }
   };
+
   const animateShortestPath = (nodesInShortestPathOrder) => {
     for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
       setTimeout(() => {
@@ -77,21 +94,32 @@ const PathfindingVisualizer = () => {
     console.log(visitedNodesInOrder);
   };
 
+  const getnewGridWithWallToggled = (grid, row, col) => {
+    const newGrid = [...grid];
+    const node = newGrid[row][col];
+    const newNode = {
+      ...node,
+      isWall: !node.isWall,
+    };
+    newGrid[row][col] = newNode;
+    return newGrid;
+  };
+
   useEffect(() => {
     getInitialGrid();
   }, []);
+  const { grid, mouseIsPressed } = squares;
   return (
     <>
       <button onClick={() => visualizeDijkstra()}>
         Visualize Dijkstra's Algorithm
       </button>
-
       <div className="grid">
-        {squares.grid.map((row, rowIndex) => {
+        {grid.map((row, rowIndex) => {
           return (
             <div className="row" key={rowIndex}>
               {row.map((node, nodeIndex) => {
-                const { row, col, isStart, isFinish, isVisited } = node;
+                const { row, col, isStart, isFinish, isVisited, isWall } = node;
                 return (
                   <Node
                     key={nodeIndex}
@@ -100,6 +128,11 @@ const PathfindingVisualizer = () => {
                     isFinish={isFinish}
                     isStart={isStart}
                     isVisited={isVisited}
+                    isWall={isWall}
+                    mouseIsPressed={mouseIsPressed}
+                    onMouseDown={(row, col) => handleMouseDown(row, col)}
+                    onMouseEnter={(row, col) => handleMouseEnter(row, col)}
+                    onMouseUp={() => handleMouseUp()}
                   />
                 );
               })}
